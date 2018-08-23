@@ -20,7 +20,7 @@ main(int argc, char * argv[])
   // Register this application's MooseApp and any it depends on
   MagpieApp::registerApps();
 
-  // This creates dynamic memory that we're responsible for deleting
+  // Create an instance of the application and store it in a smart pointer for easy cleanup
   std::shared_ptr<MooseApp> app = AppFactory::createAppShared("MagpieApp", argc, argv);
 
   // Execute the application
