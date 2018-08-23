@@ -15,8 +15,12 @@ or the `MOOSE_DIR` environment variable to point to the MOOSE directory.
 
 ## Install prerequisite packages
 
-Magpie needs GSL (GNU Scientific Library) and the fast Fourier transform library
-FFTW3 installed for a feature complete build. The configuration of these
+The SPPARKS and LAMMPS Monte Carlo and molecular dynamics packages are optional
+dependencies for Magpie. See [building SPPARKS](BuildingSPPARKS.md) and
+[building LAMMPS](BuildingLAMMPS.md) for instructions on how to build them.
+
+Magpie also needs GSL (GNU Scientific Library) and the fast Fourier transform
+library FFTW3 installed for a feature complete build. The configuration of these
 external packages is performed using
 [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/).
 Installation of these dependencies is system specific:

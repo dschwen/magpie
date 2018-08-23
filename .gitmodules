@@ -4,3 +4,6 @@
 [submodule "contrib/mytrim"]
 	path = contrib/mytrim
 	url = https://github.com/idaholab/mytrim.git
+[submodule "contrib/lammps"]
+	path = contrib/lammps
+	url = https://github.com/dschwen/lammps

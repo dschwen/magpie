@@ -1,5 +1,5 @@
 ###############################################################################
-############################### SPPARKS #######################################
+################################### SPPARKS ###################################
 ###############################################################################
 
 # run Make.sh to recreate the stytle_*.h files
@@ -20,4 +20,3 @@ ADDITIONAL_APP_OBJECTS     += $(patsubst %.cpp, %.$(obj-suffix), $(spparks_cppsr
 # dependencies (C, C++ files only)
 ADDITIONAL_APP_DEPS += $(patsubst %.cpp, %.$(obj-suffix).d, $(spparks_cppsrcfiles)) \
                        $(patsubst %.c, %.$(obj-suffix).d, $(spparks_csrcfiles))
-
