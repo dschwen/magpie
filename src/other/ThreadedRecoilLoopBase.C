@@ -30,7 +30,8 @@ ThreadedRecoilLoopBase::ThreadedRecoilLoopBase(const MyTRIMRasterizer & rasteriz
     _trim_parameters(_rasterizer.getTrimParameters()),
     _nvars(_trim_parameters.nVars()),
     _mesh(mesh),
-    _dim(_mesh.dimension())
+    _dim(_mesh.dimension()),
+    _distributed(_mesh.isDistributedMesh())
 {
   _simconf.setLengthScale(_trim_parameters.length_scale);
 }
@@ -42,7 +43,8 @@ ThreadedRecoilLoopBase::ThreadedRecoilLoopBase(const ThreadedRecoilLoopBase & x,
     _trim_parameters(x._trim_parameters),
     _nvars(x._nvars),
     _mesh(x._mesh),
-    _dim(x._dim)
+    _dim(x._dim),
+    _distributed(_mesh.isDistributedMesh())
 {
   _simconf.setLengthScale(_trim_parameters.length_scale);
 }
@@ -199,6 +201,14 @@ ThreadedRecoilLoopBase::operator()(const PKARange & pka_list)
           // follow this ion's trajectory and store recoils
           TRIM->trim(recoil, recoils);
 
+          // if we are using a distributed mesh and the current recoil has left the domain
+          // we send it to all possible candidate processors
+          if (_distributed && recoil->_state == MyTRIM_NS::IonBase::MOVING)
+          {
+            // loop over all processors and check if they are a candidate for receiving the recoil
+            for (processorid_type)
+          }
+
           // are we tracking atoms of this type?
           if (recoil->_tag >= 0)
           {
@@ -273,6 +283,19 @@ ThreadedRecoilLoopBase::operator()(const PKARange & pka_list)
     for (auto & v : _vacancy_buffer)
       if (v.variable_id != libMesh::invalid_uint)
         addDefectToResult(_rasterizer.periodicPoint(v.point), v.variable_id, v.weight, VACANCY);
+
+    // check if we got incoming communication
+    if (_distributed)
+    {
+      // inspect incoming message
+      Parallel::Status stat((StandardType<PKA>()));
+
+      int int_flag;
+      libmesh_call_mpi(MPI_Iprobe(Parallel::any_source, send_tag, _comm, &int_flag, stat.get()));
+
+      const auto source_pid = cast_int<processor_id_type>(status.source());
+      const auto message_size = status.size(item_type);
+    }
   }
 }
 

@@ -148,6 +148,7 @@ MyTRIMRasterizer::MyTRIMRasterizer(const InputParameters & parameters)
   : ElementUserObject(parameters),
     _nvars(coupledComponents("var")),
     _dim(_mesh.dimension()),
+    _distributed(_mesh.isDistributedMesh()),
     _var(_nvars),
     _site_volume_prop(nullptr),
     _pka_generator_names(getParam<std::vector<UserObjectName>>("pka_generator")),
@@ -276,7 +277,7 @@ MyTRIMRasterizer::MyTRIMRasterizer(const InputParameters & parameters)
   if (getParam<MooseEnum>("var_physical_meaning") == "STOICHIOMETRY")
   {
     if (!isParamValid("site_volume"))
-      mooseError("Rasterizer variables are stoiciometric contents, site_volume must be provided.");
+      mooseError("Rasterizer variables are stoichiometric contents, site_volume must be provided.");
     _site_volume_prop = &getMaterialProperty<Real>("site_volume");
   }
   else
@@ -316,7 +317,7 @@ MyTRIMRasterizer::initialize()
 {
   _execute_this_timestep = executeThisTimestep();
 
-  // We roll back the accumulated time time if the preceeding timestep did
+  // We roll back the accumulated time time if the preceding timestep did
   // not converge
   if (!_fe_problem.converged())
     _accumulated_time = _accumulated_time_old;
@@ -373,7 +374,7 @@ MyTRIMRasterizer::execute()
   // store in map
   _material_map[_current_elem->id()] = average;
 
-  // update corrent element volume
+  // update current element volume
   _pka_parameters._volume = vol;
 
   // add PKAs for current element
@@ -404,13 +405,33 @@ MyTRIMRasterizer::finalize()
   // bail out early if not executing this timestep
   if (!_execute_this_timestep)
   {
-    // no BCMC done, so wee accumulate this step's time to be taken care of by a later BCMC run
+    // no BCMC done, so we accumulate this step's time to be taken care of by a later BCMC run
     _accumulated_time += _fe_problem.dt();
     return;
   }
 
   // BCMC was run for the accumulated time - the debt is paid
   _accumulated_time = 0.0;
+
+  // we do not perform communication here in the distributed operation mode
+  if (_distributed)
+  {
+    // use hashing scheme to assign per PKA seeds
+    std::hash<Real> _number_hasher{};
+    for (auto i = beginIndex(_pka_list); i < _pka_list.size(); ++i)
+    {
+      std::size_t seed = _number_hasher(_pka_list[i]._E);
+      for (unsigned int i = 0; i < _dim; ++i)
+      {
+        seed ^= _number_hasher(_pka_list[i]._pos(i)) << (i * 2 + 1);
+        seed ^= _number_hasher(_pka_list[i]._dir(i)) << (i * 2 + 2);
+      }
+      _pka_list[i]._seed = seed;
+    }
+
+    // early return from finalize()
+    return;
+  }
 
   // for single processor runs we do not need to do anything here
   if (_app.n_processors() > 1)
@@ -421,7 +442,7 @@ MyTRIMRasterizer::finalize()
     // create byte buffers for the streams received from all processors
     std::vector<std::string> recv_buffers;
 
-    // pack the complex datastructures into the string stream
+    // pack the complex data structures into the string stream
     serialize(send_buffer);
 
     // broadcast serialized data to and receive from all processors
@@ -597,7 +618,7 @@ MyTRIMRasterizer::deserialize(std::vector<std::string> & serialized_buffers)
   // The input string stream used for deserialization
   std::istringstream iss;
 
-  // Loop over all datastructures for all procerssors to perfrom the gather operation
+  // Loop over all data structures for all processors to perform the gather operation
   for (unsigned int rank = 0; rank < serialized_buffers.size(); ++rank)
   {
     // skip the current processor (its data is already in the structures)

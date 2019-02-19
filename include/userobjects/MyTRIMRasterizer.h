@@ -164,6 +164,9 @@ protected:
   /// dimension of the mesh
   const unsigned int _dim;
 
+  /// simulation is using a distributed mesh
+  const bool _distributed;
+
   /// Simulation parameters
   TrimParameters _trim_parameters;
 

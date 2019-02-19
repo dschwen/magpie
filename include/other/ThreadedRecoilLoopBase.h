@@ -129,6 +129,9 @@ private:
       nanoflann::L2_Simple_Adaptor<Real, PointListAdaptor<MyTRIMDefectBufferItem>>,
       PointListAdaptor<MyTRIMDefectBufferItem>,
       LIBMESH_DIM>;
+
+  /// simulation is using a distributed mesh
+  const bool _distributed;
 };
 
 #endif // THREADEDRECOILLOOPBASE_H
