@@ -16,6 +16,11 @@ ifneq ($(wildcard $(MYTRIM_DIR)/trim.h),)
   include $(MAGPIE_DIR)/contrib/mytrim.mk
 endif
 
+ifneq ($(CUDA_ENABLED),)
+  ADDITIONAL_LIBS += '-lcufft -lcufftw'
+  ADDITIONAL_CPPFLAGS += -DCUDA_ENABLED
+endif
+
 include $(MAGPIE_DIR)/contrib/gsl.mk
 include $(MAGPIE_DIR)/contrib/fftw3.mk
 
